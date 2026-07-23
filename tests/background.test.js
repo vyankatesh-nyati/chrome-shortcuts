@@ -1,6 +1,6 @@
 // tests/background.test.js
 import { describe, it, expect, vi } from 'vitest'
-import { isPanelOpen, setPanelOpen, handleToggleSidebar } from '../src/background.js'
+import { createPanelState, isPanelOpen, setPanelOpen, handleToggleSidebar, registerListeners } from '../src/background.js'
 
 function makeFakeChrome(sessionData = {}) {
   return {
@@ -22,37 +22,80 @@ function makeFakeChrome(sessionData = {}) {
 }
 
 describe('panel open state', () => {
-  it('isPanelOpen is false when nothing is stored', async () => {
-    const chrome = makeFakeChrome()
-    expect(await isPanelOpen(chrome, 1)).toBe(false)
+  it('isPanelOpen is false for a window with no recorded state', () => {
+    const panelState = createPanelState()
+    expect(isPanelOpen(panelState, 1)).toBe(false)
   })
 
-  it('setPanelOpen then isPanelOpen reflects the stored value', async () => {
-    const chrome = makeFakeChrome()
-    await setPanelOpen(chrome, 1, true)
-    expect(await isPanelOpen(chrome, 1)).toBe(true)
+  it('setPanelOpen then isPanelOpen reflects the stored value', () => {
+    const panelState = createPanelState()
+    setPanelOpen(panelState, 1, true)
+    expect(isPanelOpen(panelState, 1)).toBe(true)
   })
 
-  it('tracks panel state per window independently', async () => {
-    const chrome = makeFakeChrome()
-    await setPanelOpen(chrome, 1, true)
-    expect(await isPanelOpen(chrome, 2)).toBe(false)
+  it('tracks panel state per window independently', () => {
+    const panelState = createPanelState()
+    setPanelOpen(panelState, 1, true)
+    expect(isPanelOpen(panelState, 2)).toBe(false)
   })
 })
 
 describe('handleToggleSidebar', () => {
   it('opens the panel when it is currently closed', async () => {
     const chrome = makeFakeChrome()
-    await handleToggleSidebar(chrome, 7)
+    const panelState = createPanelState()
+    await handleToggleSidebar(chrome, panelState, 7)
     expect(chrome.sidePanel.open).toHaveBeenCalledWith({ windowId: 7 })
     expect(chrome.sidePanel.close).not.toHaveBeenCalled()
   })
 
   it('closes the panel when it is currently open', async () => {
     const chrome = makeFakeChrome()
-    await setPanelOpen(chrome, 7, true)
-    await handleToggleSidebar(chrome, 7)
+    const panelState = createPanelState()
+    setPanelOpen(panelState, 7, true)
+    await handleToggleSidebar(chrome, panelState, 7)
     expect(chrome.sidePanel.close).toHaveBeenCalledWith({ windowId: 7 })
     expect(chrome.sidePanel.open).not.toHaveBeenCalled()
+  })
+})
+
+describe('registerListeners', () => {
+  it('routes the toggle-sidebar command to handleToggleSidebar', async () => {
+    const chrome = makeFakeChrome()
+    registerListeners(chrome)
+    const onCommand = chrome.commands.onCommand.addListener.mock.calls[0][0]
+    await onCommand('toggle-sidebar', { windowId: 5 })
+    expect(chrome.sidePanel.open).toHaveBeenCalledWith({ windowId: 5 })
+  })
+
+  it('ignores unknown commands', async () => {
+    const chrome = makeFakeChrome()
+    registerListeners(chrome)
+    const onCommand = chrome.commands.onCommand.addListener.mock.calls[0][0]
+    await onCommand('some-other-command', { windowId: 5 })
+    expect(chrome.sidePanel.open).not.toHaveBeenCalled()
+    expect(chrome.sidePanel.close).not.toHaveBeenCalled()
+  })
+
+  it('records the panel as open when sidePanel.onOpened fires', async () => {
+    const chrome = makeFakeChrome()
+    registerListeners(chrome)
+    const onOpened = chrome.sidePanel.onOpened.addListener.mock.calls[0][0]
+    const onCommand = chrome.commands.onCommand.addListener.mock.calls[0][0]
+    onOpened({ windowId: 9 })
+    await onCommand('toggle-sidebar', { windowId: 9 })
+    expect(chrome.sidePanel.close).toHaveBeenCalledWith({ windowId: 9 })
+  })
+
+  it('records the panel as closed when sidePanel.onClosed fires', async () => {
+    const chrome = makeFakeChrome()
+    registerListeners(chrome)
+    const onOpened = chrome.sidePanel.onOpened.addListener.mock.calls[0][0]
+    const onClosed = chrome.sidePanel.onClosed.addListener.mock.calls[0][0]
+    const onCommand = chrome.commands.onCommand.addListener.mock.calls[0][0]
+    onOpened({ windowId: 9 })
+    onClosed({ windowId: 9 })
+    await onCommand('toggle-sidebar', { windowId: 9 })
+    expect(chrome.sidePanel.open).toHaveBeenCalledWith({ windowId: 9 })
   })
 })

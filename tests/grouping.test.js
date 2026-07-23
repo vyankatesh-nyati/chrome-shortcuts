@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pickTabsToGroup, nextGroupColor, GROUP_COLORS } from '../src/lib/grouping.js'
+import { pickTabsToGroup, nextGroupColor, GROUP_COLORS, nameForGroup } from '../src/lib/grouping.js'
 
 describe('pickTabsToGroup', () => {
   it('returns the id of the single highlighted tab', () => {
@@ -41,5 +41,34 @@ describe('nextGroupColor', () => {
   it('ignores duplicate colors when counting for wraparound', () => {
     const existing = [{ color: 'grey' }, { color: 'grey' }, { color: 'grey' }]
     expect(nextGroupColor(existing)).toBe('blue')
+  })
+})
+
+describe('nameForGroup', () => {
+  it('returns the hostname of the active tab URL', () => {
+    expect(nameForGroup({ url: 'https://github.com/foo/bar' })).toBe('github.com')
+  })
+
+  it('returns "New group" when the tab has no url', () => {
+    expect(nameForGroup({})).toBe('New group')
+  })
+
+  it('returns "New group" when the tab is null', () => {
+    expect(nameForGroup(null)).toBe('New group')
+  })
+
+  it('returns "New group" for an unparseable url', () => {
+    expect(nameForGroup({ url: 'not a url' })).toBe('New group')
+  })
+
+  it('returns "New group" for a url with an empty hostname', () => {
+    expect(nameForGroup({ url: 'about:blank' })).toBe('New group')
+  })
+
+  it('truncates hostnames longer than 30 characters', () => {
+    const longHost = 'a'.repeat(35) + '.com'
+    const result = nameForGroup({ url: `https://${longHost}/path` })
+    expect(result).toBe(`${longHost.slice(0, 29)}…`)
+    expect(result.length).toBe(30)
   })
 })

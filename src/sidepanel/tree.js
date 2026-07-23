@@ -5,7 +5,7 @@ export function buildTree(tabs, groups) {
   const ungrouped = []
 
   for (const tab of tabs) {
-    const entry = { id: tab.id, title: tab.title, url: tab.url, active: Boolean(tab.active) }
+    const entry = { id: tab.id, title: tab.title, url: tab.url, active: Boolean(tab.active), favIconUrl: tab.favIconUrl || null }
     if (tab.groupId !== NO_GROUP && groupsById.has(tab.groupId)) {
       groupsById.get(tab.groupId).tabs.push(entry)
     } else {

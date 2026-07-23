@@ -1,4 +1,5 @@
 import { buildTree } from './tree.js'
+import { glyphForTab, colorForTab } from './icon.js'
 
 let draggedTabId = null
 
@@ -10,12 +11,49 @@ export async function moveTabToGroup(chrome, tabId, groupId) {
   await chrome.tabs.group({ tabIds: [tabId], groupId })
 }
 
+export async function closeTab(chrome, tabId) {
+  await chrome.tabs.remove(tabId)
+}
+
+function makeTabIcon(tab) {
+  const icon = document.createElement('div')
+  icon.className = 'tab-icon'
+  if (tab.favIconUrl) {
+    const img = document.createElement('img')
+    img.src = tab.favIconUrl
+    img.alt = ''
+    icon.appendChild(img)
+  } else {
+    icon.textContent = glyphForTab(tab)
+    icon.style.backgroundColor = colorForTab(tab)
+  }
+  return icon
+}
+
 function makeTabRow(chrome, tab) {
   const row = document.createElement('div')
   row.className = 'tab' + (tab.active ? ' active' : '')
-  row.textContent = tab.title
   row.dataset.tabId = String(tab.id)
   row.draggable = true
+
+  row.appendChild(makeTabIcon(tab))
+
+  const label = document.createElement('div')
+  label.className = 'tab-label'
+  label.textContent = tab.title
+  row.appendChild(label)
+
+  const closeButton = document.createElement('button')
+  closeButton.className = 'tab-close'
+  closeButton.type = 'button'
+  closeButton.setAttribute('aria-label', 'Close tab')
+  closeButton.textContent = '✕'
+  closeButton.addEventListener('click', event => {
+    event.stopPropagation()
+    closeTab(chrome, tab.id)
+  })
+  row.appendChild(closeButton)
+
   row.addEventListener('click', () => activateTab(chrome, tab.id))
   row.addEventListener('dragstart', () => {
     draggedTabId = tab.id
@@ -30,7 +68,16 @@ function makeGroupSection(chrome, group) {
 
   const title = document.createElement('div')
   title.className = 'group-title'
-  title.textContent = group.title
+
+  const colorDot = document.createElement('span')
+  colorDot.className = 'group-color'
+  colorDot.dataset.color = group.color
+  title.appendChild(colorDot)
+
+  const titleLabel = document.createElement('span')
+  titleLabel.textContent = group.title
+  title.appendChild(titleLabel)
+
   section.appendChild(title)
 
   for (const tab of group.tabs) {

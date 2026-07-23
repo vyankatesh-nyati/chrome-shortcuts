@@ -6,7 +6,7 @@ describe('buildTree', () => {
     const tabs = [{ id: 1, title: 'A', url: 'https://a.com', active: true, groupId: -1 }]
     const result = buildTree(tabs, [])
     expect(result).toEqual({
-      ungrouped: [{ id: 1, title: 'A', url: 'https://a.com', active: true }],
+      ungrouped: [{ id: 1, title: 'A', url: 'https://a.com', active: true, favIconUrl: null }],
       groups: [],
     })
   })
@@ -19,20 +19,26 @@ describe('buildTree', () => {
     const groups = [{ id: 100, title: 'Work', color: 'blue' }]
     const result = buildTree(tabs, groups)
     expect(result).toEqual({
-      ungrouped: [{ id: 2, title: 'B', url: 'https://b.com', active: true }],
-      groups: [{ id: 100, title: 'Work', color: 'blue', tabs: [{ id: 1, title: 'A', url: 'https://a.com', active: false }] }],
+      ungrouped: [{ id: 2, title: 'B', url: 'https://b.com', active: true, favIconUrl: null }],
+      groups: [{ id: 100, title: 'Work', color: 'blue', tabs: [{ id: 1, title: 'A', url: 'https://a.com', active: false, favIconUrl: null }] }],
     })
   })
 
   it('treats a tab whose groupId matches no known group as ungrouped', () => {
     const tabs = [{ id: 1, title: 'A', url: 'https://a.com', active: false, groupId: 999 }]
     const result = buildTree(tabs, [])
-    expect(result.ungrouped).toEqual([{ id: 1, title: 'A', url: 'https://a.com', active: false }])
+    expect(result.ungrouped).toEqual([{ id: 1, title: 'A', url: 'https://a.com', active: false, favIconUrl: null }])
     expect(result.groups).toEqual([])
   })
 
   it('includes empty groups with no tabs', () => {
     const result = buildTree([], [{ id: 5, title: 'Empty', color: 'red' }])
     expect(result.groups).toEqual([{ id: 5, title: 'Empty', color: 'red', tabs: [] }])
+  })
+
+  it('passes through a tab favIconUrl when present', () => {
+    const tabs = [{ id: 1, title: 'A', url: 'https://a.com', active: false, groupId: -1, favIconUrl: 'https://a.com/favicon.ico' }]
+    const result = buildTree(tabs, [])
+    expect(result.ungrouped[0].favIconUrl).toBe('https://a.com/favicon.ico')
   })
 })

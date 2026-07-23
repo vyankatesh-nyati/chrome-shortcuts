@@ -28,6 +28,10 @@
     "toggle-sidebar": {
       "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
       "description": "Open or close the vertical sidebar"
+    },
+    "create-tab-group": {
+      "suggested_key": { "default": "Ctrl+Shift+G", "mac": "Command+Shift+G" },
+      "description": "Create a tab group from the current tab(s)"
     }
   }
 }

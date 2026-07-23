@@ -67,6 +67,7 @@ export async function handleMoveTabToGroup(chrome, windowId) {
 
   await chrome.tabs.group({ tabIds: [activeTab.id], groupId: target.id })
   await recordGroupRecency(chrome, target.id)
+  await chrome.action.setBadgeText({ text: '' })
 }
 
 export function registerListeners(chrome) {

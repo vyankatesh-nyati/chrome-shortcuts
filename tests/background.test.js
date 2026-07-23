@@ -173,7 +173,7 @@ describe('handleMoveTabToGroup', () => {
 
     expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, windowId: 9 })
     expect(chrome.tabs.group).toHaveBeenCalledWith({ tabIds: [3], groupId: 20 })
-    expect(chrome.action.setBadgeText).not.toHaveBeenCalled()
+    expect(chrome.action.setBadgeText).toHaveBeenCalledWith({ text: '' })
   })
 
   it('sets badge feedback and does not call tabs.group when there are no groups', async () => {
@@ -195,5 +195,15 @@ describe('handleMoveTabToGroup', () => {
 
     const recency = await getGroupRecency(chrome)
     expect(typeof recency[10]).toBe('number')
+  })
+
+  it('clears badge feedback when the move succeeds', async () => {
+    const activeTab = { id: 3, active: true }
+    const groups = [{ id: 10 }]
+    const chrome = makeFakeChromeForMove({}, { activeTab, groups })
+
+    await handleMoveTabToGroup(chrome, 9)
+
+    expect(chrome.action.setBadgeText).toHaveBeenCalledWith({ text: '' })
   })
 })

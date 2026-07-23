@@ -4,7 +4,7 @@ A Manifest V3 Chrome extension exposing keyboard shortcuts for three actions:
 
 1. **Toggle vertical sidebar** — opens/closes a side panel listing your tabs, nested under their tab groups.
 2. **Create tab group** — groups the current tab (or all highlighted tabs) into a new, auto-named and auto-colored group.
-3. **Move tab to group** — moves the active tab into the most recently used tab group.
+3. **Move tab to group** — opens a searchable popup listing your tab groups (most recently used one pre-selected) to move the active tab into, or to create a new group on the fly.
 
 > Chrome's own experimental native vertical-tabs strip has no extension API, so shortcut 1 is this extension's own side panel (`chrome.sidePanel`), not a toggle for Chrome's native feature. See `docs/superpowers/specs/2026-07-23-chrome-shortcuts-design.md` for why.
 
@@ -31,11 +31,11 @@ Open `chrome://extensions/shortcuts` to see and customize the three keyboard sho
 |---|---|---|---|
 | Toggle sidebar | `Ctrl+Shift+E` | `Cmd+Shift+E` | Open/close the side panel |
 | Create tab group | `Ctrl+Shift+G` | `Cmd+Shift+G` | Group the current tab(s) |
-| Move tab to group | `Ctrl+Shift+M` | `Cmd+Shift+M` | Move the active tab into the most recent group |
+| Move tab to group | `Ctrl+Shift+M` | `Cmd+Shift+M` | Open the group picker for the active tab |
 
 - **Create tab group**: if you have multiple tabs highlighted (Ctrl/Cmd-click in the tab strip), all of them are grouped together; otherwise just the active tab is grouped. The new group is named after the active tab's hostname and given the next unused color.
-- **Move tab to group**: moves the active tab into the most recently created/updated group in the current window. If no group exists yet, the toolbar badge briefly shows `!` (cleared automatically the next time a move succeeds).
-- **Side panel**: click a tab row to switch to it; drag a tab row onto a group's header to move it into that group.
+- **Move tab to group**: opens the side panel (if closed) and a search popup over it. Type to filter groups by name, or type a name that doesn't match anything to reveal a "Create tab group …" option. The most-recently-used group is pre-highlighted, so pressing Enter immediately (without typing) reproduces the old auto-pick behavior. Arrow keys move the highlight, Escape cancels, clicking outside the popup also cancels.
+- **Side panel**: click a tab row to switch to it; drag a tab row onto a group's header to move it into that group; hover a tab row to reveal a close (✕) button.
 
 If a shortcut doesn't fire, check `chrome://extensions/shortcuts` for a conflict with another extension or Chrome's own bindings, and rebind it there.
 
@@ -51,14 +51,15 @@ Chrome doesn't hot-reload unpacked extensions. After editing source files:
 
 ```bash
 npm install
-npm test        # runs the Vitest suite (48 tests)
+npm test        # runs the Vitest suite (100 tests)
 ```
 
 Project layout:
 
 - `src/lib/grouping.js` — pure decision functions (tab/color/name/target-group selection), fully unit-tested without any Chrome API.
+- `src/lib/messages.js` — the `chrome.storage.session` key shared between the background service worker and the side panel (background writes a group-picker request, the panel reads/clears it).
 - `src/background.js` — the service worker; wires the three `chrome.commands` to their handlers.
-- `src/sidepanel/` — the side panel UI (`panel.html`/`.css`/`.js`) and `tree.js` (pure tab/group tree builder).
+- `src/sidepanel/` — the side panel UI: `panel.html`/`.css`/`.js` (tab list), `tree.js` (pure tab/group tree builder), `icon.js` (favicon/glyph/color helpers), `group-picker.js` (the move-to-group search popup: filtering, keyboard nav, and the group create/select actions).
 - `scripts/gen-icons.cjs` — regenerates `icons/*.png` if needed (`node scripts/gen-icons.cjs`).
 
 Design and implementation history: `docs/superpowers/specs/` and `docs/superpowers/plans/`.

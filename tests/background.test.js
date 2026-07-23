@@ -154,56 +154,56 @@ describe('handleCreateTabGroup', () => {
   })
 })
 
-import { handleMoveTabToGroup } from '../src/background.js'
+import { handleMoveTabToGroup, GROUP_PICKER_REQUEST_KEY } from '../src/background.js'
 
 function makeFakeChromeForMove(sessionData, { activeTab, groups }) {
   const chrome = makeFakeChromeWithTabs(sessionData, { tabs: [activeTab], groups })
   chrome.tabs.query = vi.fn(async () => [activeTab])
-  chrome.action = { setBadgeText: vi.fn(async () => {}) }
   return chrome
 }
 
 describe('handleMoveTabToGroup', () => {
-  it('moves the active tab into the most recently recorded group', async () => {
+  it('opens the side panel for the window', async () => {
+    const activeTab = { id: 3, active: true }
+    const chrome = makeFakeChromeForMove({}, { activeTab, groups: [] })
+
+    await handleMoveTabToGroup(chrome, 9)
+
+    expect(chrome.sidePanel.open).toHaveBeenCalledWith({ windowId: 9 })
+  })
+
+  it('does not call chrome.tabs.group directly (the panel performs the move)', async () => {
     const activeTab = { id: 3, active: true }
     const groups = [{ id: 10 }, { id: 20 }]
     const chrome = makeFakeChromeForMove({ groupRecency: { 10: 100, 20: 200 } }, { activeTab, groups })
 
     await handleMoveTabToGroup(chrome, 9)
 
-    expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, windowId: 9 })
-    expect(chrome.tabs.group).toHaveBeenCalledWith({ tabIds: [3], groupId: 20 })
-    expect(chrome.action.setBadgeText).toHaveBeenCalledWith({ text: '' })
+    expect(chrome.tabs.group).not.toHaveBeenCalled()
   })
 
-  it('sets badge feedback and does not call tabs.group when there are no groups', async () => {
+  it('writes a group-picker request with the active tab and the most-recently-used group as default', async () => {
+    const activeTab = { id: 3, active: true }
+    const groups = [{ id: 10 }, { id: 20 }]
+    const chrome = makeFakeChromeForMove({ groupRecency: { 10: 100, 20: 200 } }, { activeTab, groups })
+
+    await handleMoveTabToGroup(chrome, 9)
+
+    const stored = await chrome.storage.session.get(GROUP_PICKER_REQUEST_KEY)
+    const request = stored[GROUP_PICKER_REQUEST_KEY]
+    expect(request.windowId).toBe(9)
+    expect(request.tabId).toBe(3)
+    expect(request.defaultGroupId).toBe(20)
+    expect(typeof request.requestId).toBe('number')
+  })
+
+  it('requests a null default group when none exist yet', async () => {
     const activeTab = { id: 3, active: true }
     const chrome = makeFakeChromeForMove({}, { activeTab, groups: [] })
 
     await handleMoveTabToGroup(chrome, 9)
 
-    expect(chrome.tabs.group).not.toHaveBeenCalled()
-    expect(chrome.action.setBadgeText).toHaveBeenCalledWith({ text: '!' })
-  })
-
-  it('records the target group as the most recent one after moving', async () => {
-    const activeTab = { id: 3, active: true }
-    const groups = [{ id: 10 }]
-    const chrome = makeFakeChromeForMove({}, { activeTab, groups })
-
-    await handleMoveTabToGroup(chrome, 9)
-
-    const recency = await getGroupRecency(chrome)
-    expect(typeof recency[10]).toBe('number')
-  })
-
-  it('clears badge feedback when the move succeeds', async () => {
-    const activeTab = { id: 3, active: true }
-    const groups = [{ id: 10 }]
-    const chrome = makeFakeChromeForMove({}, { activeTab, groups })
-
-    await handleMoveTabToGroup(chrome, 9)
-
-    expect(chrome.action.setBadgeText).toHaveBeenCalledWith({ text: '' })
+    const stored = await chrome.storage.session.get(GROUP_PICKER_REQUEST_KEY)
+    expect(stored[GROUP_PICKER_REQUEST_KEY].defaultGroupId).toBeNull()
   })
 })

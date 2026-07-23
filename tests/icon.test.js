@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { hostnameOf, glyphForTab, colorForTab } from '../src/sidepanel/icon.js'
+import { hostnameOf, glyphForTab, colorForTab, glyphForGroup } from '../src/sidepanel/icon.js'
 
 describe('hostnameOf', () => {
   it('returns the hostname of a url', () => {
@@ -40,5 +40,23 @@ describe('colorForTab', () => {
     const b = colorForTab({ url: 'https://example.com/bar' })
     expect(typeof a).toBe('string')
     expect(typeof b).toBe('string')
+  })
+})
+
+describe('glyphForGroup', () => {
+  it('returns the uppercased first letter of the group title', () => {
+    expect(glyphForGroup({ title: 'work stuff' })).toBe('W')
+  })
+
+  it('returns a fallback glyph when the title is empty', () => {
+    expect(glyphForGroup({ title: '' })).toBe('#')
+  })
+
+  it('returns a fallback glyph when the title is missing', () => {
+    expect(glyphForGroup({})).toBe('#')
+  })
+
+  it('ignores leading whitespace in the title', () => {
+    expect(glyphForGroup({ title: '  research' })).toBe('R')
   })
 })

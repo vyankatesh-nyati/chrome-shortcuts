@@ -1,5 +1,8 @@
 // src/background.js
 import { pickTabsToGroup, nextGroupColor, nameForGroup, pickTargetGroupForMove } from './lib/grouping.js'
+import { GROUP_PICKER_REQUEST_KEY } from './lib/messages.js'
+
+export { GROUP_PICKER_REQUEST_KEY }
 
 export function createPanelState() {
   return new Map()
@@ -54,20 +57,26 @@ export async function handleCreateTabGroup(chrome, windowId) {
   await recordGroupRecency(chrome, groupId)
 }
 
+// chrome.sidePanel.open() must be called synchronously (no preceding await),
+// same constraint as handleToggleSidebar. The actual group selection/creation
+// happens in the panel (src/sidepanel/group-picker.js), driven by the user
+// through a searchable popup, not silently here.
 export async function handleMoveTabToGroup(chrome, windowId) {
+  await chrome.sidePanel.open({ windowId })
+
   const [activeTab] = await chrome.tabs.query({ active: true, windowId })
   const groups = await chrome.tabGroups.query({ windowId })
   const recency = await getGroupRecency(chrome)
   const target = pickTargetGroupForMove(groups, recency)
 
-  if (!target) {
-    await chrome.action.setBadgeText({ text: '!' })
-    return
-  }
-
-  await chrome.tabs.group({ tabIds: [activeTab.id], groupId: target.id })
-  await recordGroupRecency(chrome, target.id)
-  await chrome.action.setBadgeText({ text: '' })
+  await chrome.storage.session.set({
+    [GROUP_PICKER_REQUEST_KEY]: {
+      windowId,
+      tabId: activeTab.id,
+      defaultGroupId: target ? target.id : null,
+      requestId: Date.now(),
+    },
+  })
 }
 
 export function registerListeners(chrome) {

@@ -1,14 +1,14 @@
 import { buildTree } from './tree.js'
 import { glyphForTab, colorForTab } from './icon.js'
+import { moveTabToGroup, maybeOpenGroupPickerForThisWindow } from './group-picker.js'
+import { GROUP_PICKER_REQUEST_KEY } from '../lib/messages.js'
+
+export { moveTabToGroup }
 
 let draggedTabId = null
 
 export async function activateTab(chrome, tabId) {
   await chrome.tabs.update(tabId, { active: true })
-}
-
-export async function moveTabToGroup(chrome, tabId, groupId) {
-  await chrome.tabs.group({ tabIds: [tabId], groupId })
 }
 
 export async function closeTab(chrome, tabId) {
@@ -128,4 +128,13 @@ if (typeof chrome !== 'undefined' && typeof document !== 'undefined') {
   chrome.tabs.onActivated.addListener(refresh)
   chrome.tabGroups.onUpdated.addListener(refresh)
   chrome.tabGroups.onRemoved.addListener(refresh)
+
+  const pickerContainer = document.getElementById('group-picker-root')
+  const checkGroupPickerRequest = () => maybeOpenGroupPickerForThisWindow(chrome, pickerContainer)
+  checkGroupPickerRequest()
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'session' && GROUP_PICKER_REQUEST_KEY in changes) {
+      checkGroupPickerRequest()
+    }
+  })
 }

@@ -23,3 +23,8 @@ export function colorForTab(tab) {
   }
   return ICON_COLORS[hash % ICON_COLORS.length]
 }
+
+export function glyphForGroup(group) {
+  const title = (group.title || '').trim()
+  return title ? title[0].toUpperCase() : '#'
+}

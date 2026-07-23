@@ -1,0 +1,21 @@
+body {
+  margin: 0;
+  font: 13px system-ui, sans-serif;
+}
+.group-title {
+  font-weight: 600;
+  padding: 4px 8px;
+}
+.tab {
+  padding: 4px 8px 4px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab.active {
+  background: #e8f0fe;
+}
+.ungrouped .tab {
+  padding-left: 8px;
+}

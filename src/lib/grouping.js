@@ -28,3 +28,18 @@ export function nameForGroup(activeTab) {
     ? `${hostname.slice(0, MAX_GROUP_NAME_LENGTH - 1)}…`
     : hostname
 }
+
+export function pickTargetGroupForMove(groups, recencyById) {
+  if (!Array.isArray(groups) || groups.length === 0) return null
+  const recency = recencyById || {}
+  let best = null
+  let bestTime = -Infinity
+  for (const group of groups) {
+    const t = recency[group.id]
+    if (typeof t === 'number' && t > bestTime) {
+      best = group
+      bestTime = t
+    }
+  }
+  return best || groups[groups.length - 1]
+}

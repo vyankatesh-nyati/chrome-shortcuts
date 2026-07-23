@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pickTabsToGroup, nextGroupColor, GROUP_COLORS, nameForGroup } from '../src/lib/grouping.js'
+import { pickTabsToGroup, nextGroupColor, GROUP_COLORS, nameForGroup, pickTargetGroupForMove } from '../src/lib/grouping.js'
 
 describe('pickTabsToGroup', () => {
   it('returns the id of the single highlighted tab', () => {
@@ -70,5 +70,28 @@ describe('nameForGroup', () => {
     const result = nameForGroup({ url: `https://${longHost}/path` })
     expect(result).toBe(`${longHost.slice(0, 29)}…`)
     expect(result.length).toBe(30)
+  })
+})
+
+describe('pickTargetGroupForMove', () => {
+  it('returns null when there are no groups', () => {
+    expect(pickTargetGroupForMove([], {})).toBeNull()
+  })
+
+  it('returns the group with the highest recorded recency', () => {
+    const groups = [{ id: 1 }, { id: 2 }, { id: 3 }]
+    const recency = { 1: 100, 2: 300, 3: 200 }
+    expect(pickTargetGroupForMove(groups, recency)).toEqual({ id: 2 })
+  })
+
+  it('falls back to the last group when no recency data exists', () => {
+    const groups = [{ id: 1 }, { id: 2 }]
+    expect(pickTargetGroupForMove(groups, {})).toEqual({ id: 2 })
+  })
+
+  it('ignores recency entries for groups that no longer exist', () => {
+    const groups = [{ id: 1 }, { id: 2 }]
+    const recency = { 99: 999 }
+    expect(pickTargetGroupForMove(groups, recency)).toEqual({ id: 2 })
   })
 })

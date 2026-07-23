@@ -24,5 +24,10 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "commands": {}
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
+      "description": "Open or close the vertical sidebar"
+    }
+  }
 }

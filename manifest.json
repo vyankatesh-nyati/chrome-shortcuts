@@ -32,6 +32,10 @@
     "create-tab-group": {
       "suggested_key": { "default": "Ctrl+Shift+G", "mac": "Command+Shift+G" },
       "description": "Create a tab group from the current tab(s)"
+    },
+    "move-tab-to-group": {
+      "suggested_key": { "default": "Ctrl+Shift+M", "mac": "Command+Shift+M" },
+      "description": "Move the active tab under a tab group"
     }
   }
 }

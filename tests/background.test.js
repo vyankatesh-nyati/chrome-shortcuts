@@ -153,3 +153,47 @@ describe('handleCreateTabGroup', () => {
     expect(typeof recency[42]).toBe('number')
   })
 })
+
+import { handleMoveTabToGroup } from '../src/background.js'
+
+function makeFakeChromeForMove(sessionData, { activeTab, groups }) {
+  const chrome = makeFakeChromeWithTabs(sessionData, { tabs: [activeTab], groups })
+  chrome.tabs.query = vi.fn(async () => [activeTab])
+  chrome.action = { setBadgeText: vi.fn(async () => {}) }
+  return chrome
+}
+
+describe('handleMoveTabToGroup', () => {
+  it('moves the active tab into the most recently recorded group', async () => {
+    const activeTab = { id: 3, active: true }
+    const groups = [{ id: 10 }, { id: 20 }]
+    const chrome = makeFakeChromeForMove({ groupRecency: { 10: 100, 20: 200 } }, { activeTab, groups })
+
+    await handleMoveTabToGroup(chrome, 9)
+
+    expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, windowId: 9 })
+    expect(chrome.tabs.group).toHaveBeenCalledWith({ tabIds: [3], groupId: 20 })
+    expect(chrome.action.setBadgeText).not.toHaveBeenCalled()
+  })
+
+  it('sets badge feedback and does not call tabs.group when there are no groups', async () => {
+    const activeTab = { id: 3, active: true }
+    const chrome = makeFakeChromeForMove({}, { activeTab, groups: [] })
+
+    await handleMoveTabToGroup(chrome, 9)
+
+    expect(chrome.tabs.group).not.toHaveBeenCalled()
+    expect(chrome.action.setBadgeText).toHaveBeenCalledWith({ text: '!' })
+  })
+
+  it('records the target group as the most recent one after moving', async () => {
+    const activeTab = { id: 3, active: true }
+    const groups = [{ id: 10 }]
+    const chrome = makeFakeChromeForMove({}, { activeTab, groups })
+
+    await handleMoveTabToGroup(chrome, 9)
+
+    const recency = await getGroupRecency(chrome)
+    expect(typeof recency[10]).toBe('number')
+  })
+})

@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { openGroupPicker, maybeOpenGroupPickerForThisWindow } from '../src/sidepanel/group-picker.js'
 import { GROUP_PICKER_REQUEST_KEY } from '../src/lib/messages.js'
+
+// jsdom's window.focus() is an unimplemented stub that logs a console error
+// on every call; real Chrome implements it fully. Stub it so test output
+// stays pristine without weakening what these tests actually verify.
+vi.spyOn(window, 'focus').mockImplementation(() => {})
 
 function makeFakeChrome({ groups = [], sessionData = {} } = {}) {
   return {
@@ -25,6 +30,11 @@ describe('openGroupPicker', () => {
 
   beforeEach(() => {
     container = document.createElement('div')
+    document.body.appendChild(container)
+  })
+
+  afterEach(() => {
+    container.remove()
   })
 
   it('renders an overlay with a search input and the groups, default group first', async () => {
@@ -36,6 +46,24 @@ describe('openGroupPicker', () => {
     expect(rows.length).toBe(2)
     expect(rows[0].querySelector('.group-picker-label').textContent).toBe('Personal')
     expect(rows[1].querySelector('.group-picker-label').textContent).toBe('Work')
+  })
+
+  it('focuses the search input immediately', async () => {
+    const chrome = makeFakeChrome({ groups: [] })
+    await openGroupPicker(chrome, container, 3, null, 9)
+
+    expect(document.activeElement).toBe(container.querySelector('.group-picker-input'))
+  })
+
+  it('retries focusing the input on the next animation frame and via a short timeout, as a defensive measure against Chrome not granting the panel focus immediately', async () => {
+    const focusSpy = vi.spyOn(HTMLInputElement.prototype, 'focus')
+    const chrome = makeFakeChrome({ groups: [] })
+
+    await openGroupPicker(chrome, container, 3, null, 9)
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    expect(focusSpy.mock.calls.length).toBeGreaterThan(1)
+    focusSpy.mockRestore()
   })
 
   it('filters the list as the user types', async () => {
@@ -155,6 +183,11 @@ describe('maybeOpenGroupPickerForThisWindow', () => {
 
   beforeEach(() => {
     container = document.createElement('div')
+    document.body.appendChild(container)
+  })
+
+  afterEach(() => {
+    container.remove()
   })
 
   it('does nothing when there is no pending request', async () => {

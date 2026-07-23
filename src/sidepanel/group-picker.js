@@ -169,7 +169,19 @@ export async function openGroupPicker(chrome, panelContainer, tabId, defaultGrou
 
   panelContainer.appendChild(overlay)
   renderList()
-  input.focus()
+
+  // Chrome doesn't reliably hand keyboard focus to a side panel opened via a
+  // chrome.commands shortcut (as opposed to a direct click), so a single
+  // focus() call can silently lose the race. Retrying across the timing
+  // window Chrome typically takes to grant the panel focus is a best-effort
+  // mitigation, not a guaranteed fix -- there is no fully reliable one.
+  function focusInput() {
+    window.focus()
+    input.focus()
+  }
+  focusInput()
+  requestAnimationFrame(focusInput)
+  setTimeout(focusInput, 60)
 }
 
 async function readGroupPickerRequest(chrome) {

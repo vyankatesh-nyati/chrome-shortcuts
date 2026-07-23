@@ -71,3 +71,35 @@ describe('moveTabToGroup', () => {
     expect(chrome.tabs.group).toHaveBeenCalledWith({ tabIds: [4], groupId: 100 })
   })
 })
+
+describe('drag and drop', () => {
+  let container
+
+  beforeEach(() => {
+    container = document.createElement('div')
+  })
+
+  it('does nothing on drop when no drag is in progress', () => {
+    const tree = buildTree([], [{ id: 200, title: 'Empty', color: 'red' }])
+    const chrome = makeFakeChrome()
+    render(container, tree, chrome)
+
+    container.querySelector('.group').dispatchEvent(new window.Event('drop', { bubbles: true }))
+
+    expect(chrome.tabs.group).not.toHaveBeenCalled()
+  })
+
+  it('moves a tab into a group when dropped after dragstart', () => {
+    const tree = buildTree(
+      [{ id: 9, title: 'D', url: 'https://d.com', active: false, groupId: -1 }],
+      [{ id: 300, title: 'Target', color: 'green' }],
+    )
+    const chrome = makeFakeChrome()
+    render(container, tree, chrome)
+
+    container.querySelector('.tab').dispatchEvent(new window.Event('dragstart', { bubbles: true }))
+    container.querySelector('.group').dispatchEvent(new window.Event('drop', { bubbles: true }))
+
+    expect(chrome.tabs.group).toHaveBeenCalledWith({ tabIds: [9], groupId: 300 })
+  })
+})

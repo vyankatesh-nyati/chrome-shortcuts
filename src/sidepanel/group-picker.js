@@ -197,6 +197,13 @@ export async function maybeOpenGroupPickerForThisWindow(chrome, panelContainer) 
   const ownWindow = await chrome.windows.getCurrent()
   if (request.windowId !== ownWindow.id) return
 
+  // Best-effort: claim window focus as early as possible once we know the
+  // picker is about to open here, before the async group query and DOM
+  // build in openGroupPicker. This does not override Chrome's focus-priority
+  // policy (see openGroupPicker) but gives a script-based claim the earliest
+  // possible chance, rather than one made only after further async delay.
+  window.focus()
+
   await clearGroupPickerRequest(chrome)
   await openGroupPicker(chrome, panelContainer, request.tabId, request.defaultGroupId, request.windowId)
 }

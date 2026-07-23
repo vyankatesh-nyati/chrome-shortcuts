@@ -164,14 +164,20 @@ describe('openGroupPicker', () => {
 
 describe('maybeOpenGroupPickerForThisWindow', () => {
   let container
+  let focusSpy
 
   beforeEach(() => {
     container = document.createElement('div')
     document.body.appendChild(container)
+    // jsdom's window.focus() is an unimplemented stub that logs a console
+    // error on every call; real Chrome implements it fully. Stub it so test
+    // output stays pristine without weakening what these tests verify.
+    focusSpy = vi.spyOn(window, 'focus').mockImplementation(() => {})
   })
 
   afterEach(() => {
     container.remove()
+    focusSpy.mockRestore()
   })
 
   it('does nothing when there is no pending request', async () => {
@@ -200,5 +206,25 @@ describe('maybeOpenGroupPickerForThisWindow', () => {
     expect(container.querySelector('.group-picker-overlay')).not.toBeNull()
     const stored = await chrome.storage.session.get(GROUP_PICKER_REQUEST_KEY)
     expect(stored[GROUP_PICKER_REQUEST_KEY]).toBeNull()
+  })
+
+  it('focuses the window as early as possible when a request matches, before querying groups', async () => {
+    const chrome = makeFakeChrome({
+      groups: [{ id: 1, title: 'Work', color: 'blue' }],
+      sessionData: { [GROUP_PICKER_REQUEST_KEY]: { windowId: 9, tabId: 3, defaultGroupId: 1, requestId: 1 } },
+    })
+
+    await maybeOpenGroupPickerForThisWindow(chrome, container)
+
+    expect(focusSpy).toHaveBeenCalledTimes(1)
+    expect(focusSpy.mock.invocationCallOrder[0]).toBeLessThan(chrome.tabGroups.query.mock.invocationCallOrder[0])
+  })
+
+  it('does not call window.focus when there is no matching request', async () => {
+    const chrome = makeFakeChrome({ sessionData: {} })
+
+    await maybeOpenGroupPickerForThisWindow(chrome, container)
+
+    expect(focusSpy).not.toHaveBeenCalled()
   })
 })

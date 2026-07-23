@@ -3,11 +3,79 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+:root {
+  --sb-bg-1: #1c1c1e;
+  --sb-bg-2: #0d0d0e;
+  --sb-bg-3: #050506;
+  --sb-text: #e8e8ea;
+  --sb-text-dim: #cfcfd2;
+
+  --sb-row-bg-1: rgba(255, 255, 255, 0.05);
+  --sb-row-bg-2: rgba(255, 255, 255, 0.02);
+  --sb-row-hover-1: rgba(255, 255, 255, 0.1);
+  --sb-row-hover-2: rgba(255, 255, 255, 0.05);
+  --sb-row-active-1: rgba(255, 255, 255, 0.14);
+  --sb-row-active-2: rgba(255, 255, 255, 0.07);
+  --sb-row-border: rgba(255, 255, 255, 0.05);
+  --sb-row-border-active: rgba(255, 255, 255, 0.1);
+
+  --sb-close-color: #c8c8cc;
+  --sb-close-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --sb-overlay-bg: rgba(0, 0, 0, 0.55);
+  --sb-box-bg: #1a1a1c;
+  --sb-box-border: rgba(255, 255, 255, 0.1);
+  --sb-box-shadow: rgba(0, 0, 0, 0.5);
+
+  --sb-input-bg: #0d0d0e;
+  --sb-input-text: #f2f2f3;
+  --sb-input-border: rgba(255, 255, 255, 0.08);
+
+  --sb-row-highlight-bg: rgba(255, 255, 255, 0.09);
+  --sb-label: #e8e8ea;
+  --sb-create-label: #8fb8ff;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --sb-bg-1: #fdfdfd;
+    --sb-bg-2: #f3f3f4;
+    --sb-bg-3: #e9e9eb;
+    --sb-text: #202124;
+    --sb-text-dim: #5f6368;
+
+    --sb-row-bg-1: rgba(0, 0, 0, 0.035);
+    --sb-row-bg-2: rgba(0, 0, 0, 0.015);
+    --sb-row-hover-1: rgba(0, 0, 0, 0.06);
+    --sb-row-hover-2: rgba(0, 0, 0, 0.03);
+    --sb-row-active-1: rgba(0, 0, 0, 0.09);
+    --sb-row-active-2: rgba(0, 0, 0, 0.05);
+    --sb-row-border: rgba(0, 0, 0, 0.06);
+    --sb-row-border-active: rgba(0, 0, 0, 0.1);
+
+    --sb-close-color: #5f6368;
+    --sb-close-hover-bg: rgba(0, 0, 0, 0.06);
+
+    --sb-overlay-bg: rgba(0, 0, 0, 0.25);
+    --sb-box-bg: #ffffff;
+    --sb-box-border: rgba(0, 0, 0, 0.1);
+    --sb-box-shadow: rgba(0, 0, 0, 0.2);
+
+    --sb-input-bg: #f1f3f4;
+    --sb-input-text: #202124;
+    --sb-input-border: rgba(0, 0, 0, 0.08);
+
+    --sb-row-highlight-bg: rgba(0, 0, 0, 0.06);
+    --sb-label: #202124;
+    --sb-create-label: #1a56db;
+  }
+}
+
 body {
   margin: 0;
   font: 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(180deg, #1c1c1e 0%, #0d0d0e 55%, #050506 100%);
-  color: #e8e8ea;
+  background: linear-gradient(180deg, var(--sb-bg-1) 0%, var(--sb-bg-2) 55%, var(--sb-bg-3) 100%);
+  color: var(--sb-text);
 }
 
 #root {
@@ -26,7 +94,7 @@ body {
   padding: 3px 6px;
   font-weight: 600;
   font-size: 11px;
-  color: #cfcfd2;
+  color: var(--sb-text-dim);
 }
 
 .group-color {
@@ -61,19 +129,19 @@ body {
   height: 28px;
   padding: 0 6px;
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, var(--sb-row-bg-1), var(--sb-row-bg-2));
+  border: 1px solid var(--sb-row-border);
   cursor: pointer;
   animation: sb-fade 0.3s ease both;
 }
 
 .tab:hover {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(180deg, var(--sb-row-hover-1), var(--sb-row-hover-2));
 }
 
 .tab.active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.07));
-  border-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, var(--sb-row-active-1), var(--sb-row-active-2));
+  border-color: var(--sb-row-border-active);
 }
 
 .tab-icon {
@@ -101,7 +169,7 @@ body {
   flex: 1;
   min-width: 0;
   font-size: 12px;
-  color: #e8e8ea;
+  color: var(--sb-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -118,7 +186,7 @@ body {
   justify-content: center;
   border: none;
   background: transparent;
-  color: #c8c8cc;
+  color: var(--sb-close-color);
   font-size: 10px;
   line-height: 1;
   cursor: pointer;
@@ -131,13 +199,13 @@ body {
 }
 
 .tab-close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--sb-close-hover-bg);
 }
 
 .group-picker-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--sb-overlay-bg);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: flex-start;
@@ -149,22 +217,22 @@ body {
 .group-picker-box {
   width: 280px;
   max-width: calc(100% - 24px);
-  background: #1a1a1c;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sb-box-bg);
+  border: 1px solid var(--sb-box-border);
   border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px var(--sb-box-shadow);
   overflow: hidden;
 }
 
 .group-picker-input {
   width: 100%;
   box-sizing: border-box;
-  background: #0d0d0e;
+  background: var(--sb-input-bg);
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--sb-input-border);
   border-radius: 0;
   padding: 12px;
-  color: #f2f2f3;
+  color: var(--sb-input-text);
   font-size: 13px;
   outline: none;
 }
@@ -185,7 +253,7 @@ body {
 }
 
 .group-picker-row.highlighted {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--sb-row-highlight-bg);
 }
 
 .group-picker-icon {
@@ -219,12 +287,12 @@ body {
   flex: 1;
   min-width: 0;
   font-size: 13px;
-  color: #e8e8ea;
+  color: var(--sb-label);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .group-picker-create .group-picker-label {
-  color: #8fb8ff;
+  color: var(--sb-create-label);
 }

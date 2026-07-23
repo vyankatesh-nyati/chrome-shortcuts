@@ -35,7 +35,7 @@ Open `chrome://extensions/shortcuts` to see and customize the three keyboard sho
 
 - **Create tab group**: if you have multiple tabs highlighted (Ctrl/Cmd-click in the tab strip), all of them are grouped together; otherwise just the active tab is grouped. The new group is named after the active tab's hostname and given the next unused color.
 - **Move tab to group**: opens the side panel (if closed) and a search popup over it. Type to filter groups by name, or type a name that doesn't match anything to reveal a "Create tab group …" option. The most-recently-used group is pre-highlighted, so pressing Enter immediately (without typing) reproduces the old auto-pick behavior. Arrow keys move the highlight, Escape cancels, clicking outside the popup also cancels.
-- **Side panel**: click a tab row to switch to it; drag a tab row onto a group's header to move it into that group; hover a tab row to reveal a close (✕) button.
+- **Side panel**: click a tab row to switch to it; drag a tab row onto a group's header to move it into that group; hover a tab row to reveal a close (✕) button. The panel's colors follow your OS's light/dark setting (`prefers-color-scheme`) — this is the only theme signal Chrome exposes to extension pages, so it tracks your system setting rather than Chrome's own in-app appearance override when the two differ.
 
 If a shortcut doesn't fire, check `chrome://extensions/shortcuts` for a conflict with another extension or Chrome's own bindings, and rebind it there.
 
@@ -51,7 +51,7 @@ Chrome doesn't hot-reload unpacked extensions. After editing source files:
 
 ```bash
 npm install
-npm test        # runs the Vitest suite (100 tests)
+npm test        # runs the Vitest suite (102 tests)
 ```
 
 Project layout:
@@ -64,6 +64,7 @@ Project layout:
 
 Design and implementation history: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
 
-## Known limitation
+## Known limitations
 
-The manual end-to-end smoke test (loading the unpacked extension in real Chrome and exercising all three shortcuts + drag-and-drop) should be run after any change — automated tests cover the decision logic and DOM rendering, but not real Chrome's user-gesture/timing behavior.
+- The manual end-to-end smoke test (loading the unpacked extension in real Chrome and exercising all three shortcuts + drag-and-drop) should be run after any change — automated tests cover the decision logic and DOM rendering, but not real Chrome's user-gesture/timing behavior.
+- Chrome doesn't always reliably hand keyboard focus to a side panel opened via a shortcut (as opposed to a direct click). The group picker retries focusing its search box across a short window after opening, but this is a best-effort mitigation for a known Chrome platform limitation, not a guaranteed fix.
